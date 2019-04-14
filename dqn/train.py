@@ -86,8 +86,8 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
         # Compute the next_Q prediction using the target network
         next_Q, _ = target_network(torch.from_numpy(NCHW_from_NHWC(batch_next_state)).to(device)).max(dim=1)
         # Get the estimate for the current Q updated, set to r if the state is terminal
-        mask = torch.Tensor(np.invert(batch_done).astype('float'))
-        Q_estimate = torch.from_numpy(batch_reward).float() + gamma * next_Q * mask
+        mask = torch.Tensor(np.invert(batch_done).astype('float')).to(device)
+        Q_estimate = torch.from_numpy(batch_reward).float().to(device) + gamma * next_Q * mask
         # Compute the loss w.r.t. the prediction for the selected actions
         Q_preds = policy_network(torch.from_numpy(NCHW_from_NHWC(batch_state)).to(device)).gather(1, torch.from_numpy(batch_action).to(device).unsqueeze(1))
         loss = F.mse_loss(Q_preds, Q_estimate) # We can use MSE instead of Huber because we can directly clip gradients
