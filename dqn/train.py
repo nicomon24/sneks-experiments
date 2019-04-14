@@ -86,8 +86,8 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
         ep_len += 1
         for i in range(num_envs):
             if done[i]:
-                writer.add_scalar('performance/return', ep_rew, completed_episodes)
-                writer.add_scalar('performance/length', timestep, completed_episodes)
+                writer.add_scalar('performance/return', ep_rew[i], completed_episodes)
+                writer.add_scalar('performance/length', ep_len[i], completed_episodes)
                 completed_episodes += 1
                 ep_rew[i] = 0.0
                 ep_len[i] = 0
