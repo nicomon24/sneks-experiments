@@ -23,7 +23,7 @@ EPSILON_START = 1.0
 EPSILON_STOP = 0.05
 
 def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=1000,
-            er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0):
+            er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16):
     # Parallel environment thunk function
     def make_env_generator(rnd_seed):
         def make_env():
@@ -100,7 +100,7 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
         optimizer.step()
 
         # Copy the policy network to the target network
-        if (timestep // num_envs) % 100 == 0:
+        if (timestep // num_envs) % update_target == 0:
             target_network = copy.deepcopy(policy_network)
             losses = losses[-100:]
 
@@ -125,6 +125,7 @@ if __name__ == '__main__':
     parser.add_argument('--er_capacity', help='Experience replay capacity.', type=int_scientific, default=1e4)
     parser.add_argument('--epsilon_decay_last_step', help='Step at which the epsilon plateau is reached.', type=int_scientific, default=1e4)
     parser.add_argument('--batch_size', help='Experience batch size.', type=int, default=16)
+    parser.add_argument('--update_target', help='Number of iterations for each target update.', type=int, default=16)
     parser.add_argument('--lr', help='Optimizer learning rate.', type=float, default=1e-3)
     parser.add_argument('--gamma', help='Discount factor for the MDP.', type=float, default=1.0)
     args = parser.parse_args()
