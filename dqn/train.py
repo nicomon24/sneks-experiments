@@ -18,6 +18,7 @@ from qnetwork import QNetwork
 from experience_replay import ExperienceReplay
 from common.vec_env.shmem_vec_env import ShmemVecEnv
 from common.pytorch_utils import NCHW_from_NHWC, NHWC_from_NCHW
+from common.atari_wrappers import EpisodicLifeEnv, NoopResetEnv, MaxAndSkipEnv, FireResetEnv, WarpFrame, FrameStack, ClipRewardEnv
 
 EPSILON_START = 1.0
 EPSILON_STOP = 0.05
@@ -28,7 +29,13 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
     def make_env_generator(rnd_seed):
         def make_env():
             env = gym.make(env_name)
-            env = NormalizeInt8(env)
+            env = EpisodicLifeEnv(env)
+            env = NoopResetEnv(env)
+            env = MaxAndSkipEnv(env)
+            env = FireResetEnv(env)
+            env = WarpFrame(env)
+            env = FrameStack(env)
+            env = ClipRewardEnv(env)
             env.seed(rnd_seed)
             return env
         return make_env
@@ -41,6 +48,7 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
     target_network = QNetwork(vec_env.observation_space, vec_env.action_space).to(device)
     # Copy the policy network
     target_network = copy.deepcopy(policy_network)
+    target_network.eval()
     # Init the experience replay
     memory = ExperienceReplay(capacity=er_capacity)
     # Define the optimizer
@@ -102,6 +110,7 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
         # Copy the policy network to the target network
         if (timestep // num_envs) % update_target == 0:
             target_network = copy.deepcopy(policy_network)
+            target_network.eval()
             losses = losses[-100:]
 
         if (timestep // num_envs) % 100 == 0:
