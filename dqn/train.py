@@ -12,6 +12,7 @@ import numpy as np
 import sneks
 from sneks.wrappers import NormalizeInt8
 import copy
+from tensorboardX import SummaryWriter
 
 # Local Imports
 from qnetwork import QNetwork
@@ -24,7 +25,8 @@ EPSILON_START = 1.0
 EPSILON_STOP = 0.05
 
 def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=1000,
-            er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16):
+            er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
+            logdir='logs'):
     # Parallel environment thunk function
     def make_env_generator(rnd_seed):
         def make_env():
@@ -54,17 +56,21 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
     memory = ExperienceReplay(capacity=er_capacity)
     # Define the optimizer
     optimizer = optim.RMSprop(policy_network.parameters(), lr=lr)
+    # Declare the summary writer for tensorboard
+    writer = SummaryWriter(logdir)
 
     # Initialize the environments
     obs = vec_env.reset()
     ep_rew = np.zeros(num_envs)
     ep_len = np.zeros(num_envs)
-    episode_returns = []
-    episode_lens = []
-    losses = []
+    completed_episodes = 0
+
+    # TMP
+    assert update_target % num_envs == 0, 'Num _envs must be divisor of update_target'
 
     # Loop for the selected number of timesteps
     for timestep in range(0, timesteps, num_envs):
+
         # Epsilon starts from EPSILON_START and linearly decreases till epsilon_decay_last_step to EPSILON_STOP
         epsilon = EPSILON_STOP + max(0, (EPSILON_START - EPSILON_STOP)*(epsilon_decay_last_step-timestep)/epsilon_decay_last_step)
         # Get the selected action
@@ -80,12 +86,11 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
         ep_len += 1
         for i in range(num_envs):
             if done[i]:
-                episode_returns.append(ep_rew[i])
-                episode_lens.append(ep_len[i])
+                writer.add_scalar('performance/return', ep_rew, completed_episodes)
+                writer.add_scalar('performance/length', timestep, completed_episodes)
+                completed_episodes += 1
                 ep_rew[i] = 0.0
                 ep_len[i] = 0
-                episode_returns = episode_returns[-100:]
-                episode_lens = episode_lens[-100:]
 
         # Add new transitions to experience replay
         memory.push(state=previous_obs, action=actions, reward=rew, next_state=obs, done=done)
@@ -109,17 +114,21 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
         optimizer.step()
 
         # Copy the policy network to the target network
-        if (timestep // num_envs) % update_target == 0:
+        if timestep % update_target == 0:
             target_network = copy.deepcopy(policy_network)
             target_network.eval()
-            losses = losses[-100:]
 
-        if (timestep // num_envs) % 100 == 0:
-            print('-------------------------')
-            print('LOSS:', np.mean(losses[-100:]))
-            print('EPISODE:', np.mean(episode_lens), '\t', np.mean(episode_returns))
-            print('EPSILON:', epsilon)
-            print('TIMESTEPS:', timestep)
+        writer.add_scalar('internals/epsilon', epsilon, timestep)
+        writer.add_scalar('internals/timesteps', timestep, timestep)
+        writer.add_scalar('internals/loss', loss.item(), timestep)
+        writer.add_scalar('internals/episodes', completed_episodes, timestep)
+
+    # Ending things
+    writer.close()
+    env.close()
+
+    # Save network
+    torch.save(policy_network.state_dict(), 'qn.pth')
 
 if __name__ == '__main__':
     # Check also for scientific notation
@@ -129,6 +138,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--env_name', help='Environment to train on.', type=str, default='snek-rgb-16-v1')
+    parser.add_argument('--logdir', help='Directory to save the logs to.', type=str, default='logs/')
     parser.add_argument('--num_envs', help='Number of parallel environments.', type=int, default=1)
     parser.add_argument('--timesteps', help='Number of parallel environments.', type=int_scientific, default=1)
     parser.add_argument('--seed', help='Random seed.', type=int, default=42)
