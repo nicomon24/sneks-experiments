@@ -32,11 +32,13 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
             env.seed(rnd_seed)
             return env
         return make_env
+    # Get PyTorch device
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # Create the parallel environment
     vec_env = ShmemVecEnv([make_env_generator(seed + i) for i in range(num_envs)])
     # Init Q networks
-    policy_network = QNetwork(vec_env.observation_space, vec_env.action_space)
-    target_network = QNetwork(vec_env.observation_space, vec_env.action_space)
+    policy_network = QNetwork(vec_env.observation_space, vec_env.action_space).to(device)
+    target_network = QNetwork(vec_env.observation_space, vec_env.action_space).to(device)
     # Copy the policy network
     target_network = copy.deepcopy(policy_network)
     # Init the experience replay
@@ -57,7 +59,7 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
         # Epsilon starts from EPSILON_START and linearly decreases till epsilon_decay_last_step to EPSILON_STOP
         epsilon = EPSILON_STOP + max(0, (EPSILON_START - EPSILON_STOP)*(epsilon_decay_last_step-timestep)/epsilon_decay_last_step)
         # Get the selected action
-        greedy_action = policy_network(torch.from_numpy(NCHW_from_NHWC(obs))).argmax(dim=1).detach().numpy()
+        greedy_action = policy_network(torch.from_numpy(NCHW_from_NHWC(obs)).to(device)).argmax(dim=1).cpu().detach().numpy()
         epsilon_prob = np.random.rand(num_envs)
         actions = np.array([greedy_action[i] if epsilon_prob[i] > epsilon else vec_env.action_space.sample() for i in range(num_envs)])
 
@@ -82,12 +84,12 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
         # Sample batch of experience
         batch_state, batch_action, batch_reward, batch_next_state, batch_done = memory.sample(batch_size)
         # Compute the next_Q prediction using the target network
-        next_Q, _ = target_network(torch.from_numpy(NCHW_from_NHWC(batch_next_state))).max(dim=1)
+        next_Q, _ = target_network(torch.from_numpy(NCHW_from_NHWC(batch_next_state)).to(device)).max(dim=1)
         # Get the estimate for the current Q updated, set to r if the state is terminal
         mask = torch.Tensor(np.invert(batch_done).astype('float'))
         Q_estimate = torch.from_numpy(batch_reward).float() + gamma * next_Q * mask
         # Compute the loss w.r.t. the prediction for the selected actions
-        Q_preds = policy_network(torch.from_numpy(NCHW_from_NHWC(batch_state))).gather(1, torch.from_numpy(batch_action).unsqueeze(1))
+        Q_preds = policy_network(torch.from_numpy(NCHW_from_NHWC(batch_state)).to(device)).gather(1, torch.from_numpy(batch_action).to(device).unsqueeze(1))
         loss = F.mse_loss(Q_preds, Q_estimate) # We can use MSE instead of Huber because we can directly clip gradients
         losses.append(loss.item())
         # Optimizer step
