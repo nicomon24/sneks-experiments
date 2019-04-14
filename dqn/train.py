@@ -112,15 +112,18 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
             print('TIMESTEPS:', timestep)
 
 if __name__ == '__main__':
+    # Check also for scientific notation
+    def int_scientific(x):
+        return int(float(x))
     # Declare and parse command line arguments
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--env_name', help='Environment to train on.', type=str, default='snek-rgb-16-v1')
     parser.add_argument('--num_envs', help='Number of parallel environments.', type=int, default=1)
-    parser.add_argument('--timesteps', help='Number of parallel environments.', type=int, default=1)
+    parser.add_argument('--timesteps', help='Number of parallel environments.', type=int_scientific, default=1)
     parser.add_argument('--seed', help='Random seed.', type=int, default=42)
-    parser.add_argument('--er_capacity', help='Experience replay capacity.', type=int, default=1e4)
-    parser.add_argument('--epsilon_decay_last_step', help='Step at which the epsilon plateau is reached.', type=int, default=1e4)
+    parser.add_argument('--er_capacity', help='Experience replay capacity.', type=int_scientific, default=1e4)
+    parser.add_argument('--epsilon_decay_last_step', help='Step at which the epsilon plateau is reached.', type=int_scientific, default=1e4)
     parser.add_argument('--batch_size', help='Experience batch size.', type=int, default=16)
     parser.add_argument('--lr', help='Optimizer learning rate.', type=float, default=1e-3)
     parser.add_argument('--gamma', help='Discount factor for the MDP.', type=float, default=1.0)
