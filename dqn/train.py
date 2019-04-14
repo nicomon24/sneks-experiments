@@ -18,7 +18,7 @@ from qnetwork import QNetwork
 from experience_replay import ExperienceReplay
 from common.vec_env.shmem_vec_env import ShmemVecEnv
 from common.pytorch_utils import NCHW_from_NHWC, NHWC_from_NCHW
-from common.atari_wrappers import EpisodicLifeEnv, NoopResetEnv, MaxAndSkipEnv, FireResetEnv, WarpFrame, FrameStack, ClipRewardEnv
+from common.atari_wrappers import EpisodicLifeEnv, NoopResetEnv, MaxAndSkipEnv, FireResetEnv, WarpFrame, FrameStack, ClipRewardEnv, ScaledFloatFrame
 
 EPSILON_START = 1.0
 EPSILON_STOP = 0.05
@@ -36,6 +36,7 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
             env = WarpFrame(env)
             env = FrameStack(env, 4)
             env = ClipRewardEnv(env)
+            env = ScaledFloatFrame(env)
             env.seed(rnd_seed)
             return env
         return make_env
