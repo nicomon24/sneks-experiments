@@ -105,7 +105,6 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
         # Compute the loss w.r.t. the prediction for the selected actions
         Q_preds = policy_network(torch.from_numpy(NCHW_from_NHWC(batch_state)).to(device)).gather(1, torch.from_numpy(batch_action).to(device).unsqueeze(1))
         loss = F.mse_loss(Q_preds, Q_estimate) # We can use MSE instead of Huber because we can directly clip gradients
-        losses.append(loss.item())
         # Optimizer step
         optimizer.zero_grad()
         loss.backward()
