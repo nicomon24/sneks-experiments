@@ -34,7 +34,7 @@ def train(env_name, seed=42, num_envs=1, timesteps=1, epsilon_decay_last_step=10
             env = MaxAndSkipEnv(env)
             env = FireResetEnv(env)
             env = WarpFrame(env)
-            env = FrameStack(env)
+            env = FrameStack(env, 4)
             env = ClipRewardEnv(env)
             env.seed(rnd_seed)
             return env
