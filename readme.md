@@ -3,7 +3,7 @@
 # Sneks solutions
 This repository contains a set of different solutions and studies for the many [sneks environments](https://github.com/nicomon24/Sneks). This has multiple goals:
 - Easy to read and explained implementation of various algorithm, from the more classical ones to state-of-the-art methods. The algorithms will be implemented using PyTorch.
-- Studies to understand state representation issues in complex visual policies in reinforcement-learning
+- Studies to understand state representation issues in complex visual policies in reinforcement-learning.
 - Studies to explore the instability of multi-agent systems, as suggested by [this OpenAI post](https://openai.com/blog/requests-for-research-2/).
 
 ## Draft of Roadmap
