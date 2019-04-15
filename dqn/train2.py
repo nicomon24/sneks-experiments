@@ -25,16 +25,6 @@ EPSILON_START = 1.0
 EPSILON_STOP = 0.02
 PLAY_STEPS = 1
 
-class MultidimWrapper(gym.Wrapper):
-
-    def reset(self):
-        obs = self.env.reset()
-        return np.expand_dims(np.array(obs), axis=0)
-
-    def step(self, action):
-        obs, reward, done, info = self.env.step(action)
-        return np.expand_dims(np.array(obs), axis=0), np.expand_dims(np.array(reward), axis=0), np.expand_dims(np.array(done), axis=0), info
-
 
 def make_env(env_name, rnd_seed):
     env = gym.make(env_name)

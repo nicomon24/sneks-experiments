@@ -103,7 +103,6 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
         obs, rew, done, _ = env.step(action)
         ep_rew += rew
         ep_len += 1
-        env.render()
 
         if done:
             # Compute speed
@@ -138,7 +137,6 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             # Compute the loss w.r.t. the prediction for the selected actions
             Q_preds = policy_network(batch_state).gather(1, batch_action)
             loss = F.mse_loss(Q_preds, Q_estimate) # We can use MSE instead of Huber because we can directly clip gradients
-            '''
             # Optimizer step
             optimizer.zero_grad()
             loss.backward()
@@ -152,7 +150,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
                 target_network.eval()
 
             writer.add_scalar('internals/loss', loss.item(), timestep)
-            '''
+
         writer.add_scalar('internals/epsilon', epsilon, timestep)
         writer.add_scalar('internals/episodes', completed_episodes, timestep)
         writer.add_scalar('internals/timesteps', timestep, timestep)
