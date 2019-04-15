@@ -6,6 +6,7 @@
 """
 
 import numpy as np
+import torch
 
 class ExperienceReplay(object):
 
@@ -14,11 +15,11 @@ class ExperienceReplay(object):
         self.capacity = capacity
         # Create lazy-loading memory structure
         self.memory = {
-            'state': None,
-            'action': None,
-            'reward': None,
-            'next_state': None,
-            'done': None
+            'state': [],
+            'action': [],
+            'reward': [],
+            'next_state': [],
+            'done': []
         }
 
     def push(self, **kwargs):
@@ -27,7 +28,7 @@ class ExperienceReplay(object):
         """
         # Update the memory dict (all the keys)
         for key in self.memory.keys():
-            self.memory[key] = kwargs[key] if self.memory[key] is None else np.concatenate((self.memory[key], kwargs[key]), axis=0)
+            self.memory[key].append(kwargs[key])
             # Remove the head of the memory if the capacity is reached
             self.memory[key] = self.memory[key][-self.capacity:]
 
@@ -37,14 +38,14 @@ class ExperienceReplay(object):
         """
         indexes = np.arange(len(self))
         selected = np.random.choice(indexes, batch_size)
-        return (self.memory['state'][selected],
-               self.memory['action'][selected],
-               self.memory['reward'][selected],
-               self.memory['next_state'][selected],
-               self.memory['done'][selected])
+        result = []
+        for key in ['state', 'action', 'reward', 'next_state', 'done']:
+            selection = torch.cat([self.memory[key][i] for i in selected], 0)
+            result.append(selection)
+        return tuple(result)
 
     def __len__(self):
         """
             Return the current number of transitions in the experience replay buffer.
         """
-        return 0 if self.memory['state'] is None else self.memory['state'].shape[0]
+        return len(self.memory['state'])
