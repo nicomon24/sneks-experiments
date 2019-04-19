@@ -53,7 +53,7 @@ class QNetwork(nn.Module):
 
     def forward(self, batch):
         # Pass the batch through the conv layers
-        conv_out = self.conv_layers(batch)
+        conv_out = self.conv_layers(batch.float())
         # Flatten the output
         conv_out = conv_out.view(batch.size(0), -1)
         # Pass through the last linear layer and return

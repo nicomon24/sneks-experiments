@@ -43,6 +43,7 @@ def make_env(env_name, rnd_seed):
     return env
 
 def obs_to_pytorch_format(obs):
+    obs = np.array(obs)
     if len(obs.shape) == 3:
         # To 4D
         obs = np.expand_dims(obs, axis=0)
