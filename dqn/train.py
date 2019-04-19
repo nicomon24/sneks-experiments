@@ -90,7 +90,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
         done_mask = torch.ByteTensor(dones).to(device)
 
         state_action_values = net(states_v).gather(1, actions_v.unsqueeze(-1)).squeeze(-1)
-        next_state_values = tgt_net(next_states_v).max(1)[0]
+        next_state_values = tgt_net.target_model(next_states_v).max(1)[0]
         next_state_values[done_mask] = 0.0
         expected_state_action_values = next_state_values.detach() * gamma + rewards_v
         loss = F.mse_loss(state_action_values, expected_state_action_values)
