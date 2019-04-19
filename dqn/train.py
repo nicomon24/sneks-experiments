@@ -81,7 +81,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             continue
 
         optimizer.zero_grad()
-        batch = buffer.sample(batch_size)
+        batch = buffer.sample(batch_size * PLAY_STEPS)
         states, actions, rewards, dones, next_states = unpack_batch(batch)
         states_v = torch.tensor(states).to(device)
         next_states_v = torch.tensor(next_states).to(device)
