@@ -56,7 +56,6 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             logdir='logs', init_timesteps=100):
 
     env = make_env(env_name, seed)
-
     # Get PyTorch device
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # Init Q networks
