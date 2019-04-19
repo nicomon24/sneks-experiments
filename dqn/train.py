@@ -133,9 +133,8 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             batch_state = torch.from_numpy(batch_state).to(device)
             batch_next_state = torch.from_numpy(batch_next_state).to(device)
             batch_action = torch.from_numpy(batch_action).to(device)
-            batch_reward = torch.from_numpy(batch_reward).to(device)
-            batch_mask = torch.from_numpy(batch_mask).to(device)
-            print(batch_state.shape, batch_action.shape, batch_reward.shape)
+            batch_reward = torch.from_numpy(batch_reward).to(device).float()
+            batch_mask = torch.from_numpy(batch_mask).to(device).float()
             # Compute the next_Q prediction using the target network
             next_Q, _ = target_network(batch_next_state).max(dim=1)
             # Get the estimate for the current Q updated, set to r if the state is terminal
