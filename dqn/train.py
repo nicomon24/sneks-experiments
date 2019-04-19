@@ -47,7 +47,7 @@ def obs_to_pytorch_format(obs):
         # To 4D
         obs = np.expand_dims(obs, axis=0)
     # To NCHW
-    obs = NCHW_from_NHWC(obs)
+    #obs = NCHW_from_NHWC(obs)
     return obs
 
 def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
