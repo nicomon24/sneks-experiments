@@ -11,7 +11,7 @@ HYPERPARAMS = {
         'stop_reward':      18.0,
         'run_name':         'pong',
         'replay_size':      100000,
-        'replay_initial':   10000,
+        'replay_initial':   1,
         'target_net_sync':  1000,
         'epsilon_frames':   10**5,
         'epsilon_start':    1.0,
