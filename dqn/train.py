@@ -131,6 +131,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             # Sample batch of experience
             batch_state, batch_action, batch_reward, batch_next_state, batch_mask = memory.sample(batch_size * PLAY_STEPS)
             batch_state = torch.from_numpy(batch_state).to(device)
+            batch_next_state = torch.from_numpy(batch_next_state).to(device)
             batch_action = torch.from_numpy(batch_action).to(device)
             batch_reward = torch.from_numpy(batch_reward).to(device)
             batch_mask = torch.from_numpy(batch_mask).to(device)
