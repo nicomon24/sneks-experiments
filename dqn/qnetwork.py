@@ -29,7 +29,10 @@ class QNetwork(nn.Module):
 
         # Declare the convolutional layers: (kernels, kernel_size, stride)
         self.conv_layers = []
-        size0, size1, channels = self.input_shape
+        # NCHW
+        channels, size0, size1 = self.input_shape
+        # NHWC
+        # size0, size1, channels = self.input_shape
         # Check images are squared
         assert size0 == size1, "A squared observation is required."
         # Loop over the requested layers
