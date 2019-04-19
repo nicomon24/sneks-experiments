@@ -67,7 +67,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
         batch = buffer.sample(batch_size)
 
         from dis_lib import common
-        loss_v = common.calc_loss_dqn(batch, net, tgt_net.target_model, gamma=gamma, cuda=False)
+        loss_v = common.calc_loss_dqn(batch, net, tgt_net.target_model, gamma=gamma, cuda=torch.cuda.is_available())
         writer.add_scalar('loss', loss_v, timestep)
         loss_v.backward()
         optimizer.step()
