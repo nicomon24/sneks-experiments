@@ -40,7 +40,7 @@ class ExperienceReplay(object):
         selected = np.random.choice(indexes, batch_size)
         result = []
         for key in ['state', 'action', 'reward', 'next_state', 'done']:
-            selection = torch.cat([self.memory[key][i] for i in selected], 0)
+            selection = np.concatenate([self.memory[key][i] for i in selected], 0)
             result.append(selection)
         return tuple(result)
 

@@ -49,14 +49,13 @@ def make_env(env_name, rnd_seed):
     env.seed(rnd_seed)
     return env
 
-def obs_to_pytorch(obs):
+def obs_to_pytorch_format(obs):
     if len(obs.shape) == 3:
         # To 4D
         obs = np.expand_dims(obs, axis=0)
     # To NCHW
     obs = NCHW_from_NHWC(obs)
-    # To pytorch
-    return torch.from_numpy(obs)
+    return obs
 
 def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
@@ -82,7 +81,8 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
     # Initialize the environments
     obs = env.reset()
     # Process the observation to pytorch format
-    obs = obs_to_pytorch(obs).to(device)
+    obs = obs_to_pytorch_format(obs)
+
     # Init
     ep_rew, ep_len = 0, 0
     completed_episodes = 0
@@ -94,7 +94,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
         # Epsilon starts from EPSILON_START and linearly decreases till epsilon_decay_last_step to EPSILON_STOP
         epsilon = EPSILON_STOP + max(0, (EPSILON_START - EPSILON_STOP)*(epsilon_decay_last_step-timestep)/epsilon_decay_last_step)
         # Get the selected action
-        greedy_action = policy_network(obs).argmax(dim=1).cpu().detach().numpy()
+        greedy_action = policy_network(torch.from_numpy(obs).to(device)).argmax(dim=1).cpu().detach().numpy()
         epsilon_prob = np.random.rand()
         action = np.array([greedy_action[0] if epsilon_prob > epsilon else env.action_space.sample()])[0]
 
@@ -119,10 +119,10 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             obs = env.reset()
 
         # Process memories to pytorch format
-        obs = obs_to_pytorch(obs).to(device)
-        rew = torch.from_numpy(np.expand_dims(np.array([rew]), 0)).float().to(device)
-        action = torch.from_numpy(np.expand_dims(np.array([action]), 0)).to(device)
-        mask = torch.Tensor(np.invert(np.expand_dims(np.array([done]), 0)).astype('float')).to(device)
+        obs = obs_to_pytorch_format(obs)
+        rew = np.expand_dims(np.array([rew]), 0)
+        action = np.expand_dims(np.array([action]), 0)
+        mask = np.invert(np.expand_dims(np.array([done]), 0)).astype('float')
 
         # Add new transitions to experience replay
         memory.push(state=previous_obs, action=action, reward=rew, next_state=obs, done=mask)
@@ -130,6 +130,11 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
         if timestep > init_timesteps and timestep % PLAY_STEPS == 0:
             # Sample batch of experience
             batch_state, batch_action, batch_reward, batch_next_state, batch_mask = memory.sample(batch_size * PLAY_STEPS)
+            batch_state = torch.from_numpy(batch_state).to(device)
+            batch_action = torch.from_numpy(batch_action).to(device)
+            batch_reward = torch.from_numpy(batch_reward).to(device)
+            batch_mask = torch.from_numpy(batch_mask).to(device)
+            print(batch_state.shape, batch_action.shape, batch_reward.shape)
             # Compute the next_Q prediction using the target network
             next_Q, _ = target_network(batch_next_state).max(dim=1)
             # Get the estimate for the current Q updated, set to r if the state is terminal
@@ -146,8 +151,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
 
             # Copy the policy network to the target network
             if timestep % update_target == 0:
-                target_network = copy.deepcopy(policy_network)
-                target_network.eval()
+                target_network.load_state_dict(policy_network.state_dict())
 
             writer.add_scalar('internals/loss', loss.item(), timestep)
 

@@ -16,7 +16,7 @@ def conv2d_size_out(size, kernel_size = 1, stride = 1):
 
 class QNetwork(nn.Module):
 
-    def __init__(self, observation_space, action_space, layers=[(16, 8, 4), (64, 4, 2), (64, 3, 1)]):
+    def __init__(self, observation_space, action_space, layers=[(32, 8, 4), (64, 4, 2), (64, 3, 1)]):
         super().__init__()
         # Check that observation space is box
         assert isinstance(observation_space, gym.spaces.Box), "Only works for box environments."
