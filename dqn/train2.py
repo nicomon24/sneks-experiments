@@ -53,7 +53,18 @@ if __name__ == "__main__":
 
             optimizer.zero_grad()
             batch = buffer.sample(params['batch_size'])
-            loss_v = common.calc_loss_dqn(batch, net, tgt_net.target_model, gamma=params['gamma'], cuda=args.cuda)
+
+            states, actions, rewards, dones, next_states = common.unpack_batch(batch)
+
+            states_v = torch.tensor(states)
+            next_states_v = torch.tensor(next_states)
+            actions_v = torch.tensor(actions)
+            rewards_v = torch.tensor(rewards)
+            done_mask = torch.ByteTensor(dones)
+
+            
+
+
             writer.add_scalar('loss', loss_v, frame_idx)
             loss_v.backward()
             optimizer.step()

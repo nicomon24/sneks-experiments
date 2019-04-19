@@ -138,8 +138,10 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             # Optimizer step
             optimizer.zero_grad()
             loss.backward()
+            '''
             for param in policy_network.parameters():
                 param.grad.data.clamp_(-1, 1)
+            '''
             optimizer.step()
 
             # Copy the policy network to the target network
