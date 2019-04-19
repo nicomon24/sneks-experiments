@@ -60,7 +60,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
 
     ep_start_step, ep_start_time = 0, time.time()
 
-    for timestep in range(timesteps):
+    for timestep in range(0, timesteps, PLAY_STEPS):
 
         # Epsilon starts from EPSILON_START and linearly decreases till epsilon_decay_last_step to EPSILON_STOP
         epsilon = EPSILON_STOP + max(0, (EPSILON_START - EPSILON_STOP)*(epsilon_decay_last_step-timestep)/epsilon_decay_last_step)
