@@ -5,7 +5,8 @@ import argparse
 import time
 
 import torch
-import torch.optim as optim
+from torch import nn, optim
+import torch.nn.functional as F
 
 from qnetwork import QNetwork
 
@@ -19,6 +20,21 @@ def make_env(env_name, rnd_seed):
     env = gym.make(env_name)
     env = ptan.common.wrappers.wrap_dqn(env)
     return env
+
+def unpack_batch(batch):
+    states, actions, rewards, dones, last_states = [], [], [], [], []
+    for exp in batch:
+        state = np.array(exp.state, copy=False)
+        states.append(state)
+        actions.append(exp.action)
+        rewards.append(exp.reward)
+        dones.append(exp.last_state is None)
+        if exp.last_state is None:
+            last_states.append(state)       # the result will be masked anyway
+        else:
+            last_states.append(np.array(exp.last_state, copy=False))
+    return np.array(states, copy=False), np.array(actions), np.array(rewards, dtype=np.float32), \
+           np.array(dones, dtype=np.uint8), np.array(last_states, copy=False)
 
 def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
@@ -65,11 +81,23 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
 
         optimizer.zero_grad()
         batch = buffer.sample(batch_size)
+        states, actions, rewards, dones, next_states = unpack_batch(batch)
+        states_v = torch.tensor(states).to(device)
+        next_states_v = torch.tensor(next_states).to(device)
+        actions_v = torch.tensor(actions).to(device)
+        rewards_v = torch.tensor(rewards).to(device)
+        done_mask = torch.ByteTensor(dones).to(device)
 
-        from dis_lib import common
-        loss_v = common.calc_loss_dqn(batch, net, tgt_net.target_model, gamma=gamma, cuda=torch.cuda.is_available())
-        writer.add_scalar('loss', loss_v, timestep)
-        loss_v.backward()
+        state_action_values = net(states_v).gather(1, actions_v.unsqueeze(-1)).squeeze(-1)
+        next_state_values = tgt_net(next_states_v).max(1)[0]
+        next_state_values[done_mask] = 0.0
+        expected_state_action_values = next_state_values.detach() * gamma + rewards_v
+        loss = F.mse_loss(state_action_values, expected_state_action_values)
+
+        writer.add_scalar('loss', loss.item(), timestep)
+        loss.backward()
+        for param in net.parameters():
+            param.grad.data.clamp_(-1, 1)
         optimizer.step()
 
         if timestep % update_target == 0:

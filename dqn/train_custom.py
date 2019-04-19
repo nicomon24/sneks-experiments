@@ -121,6 +121,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
         memory.push(state=previous_obs, action=action, reward=rew, next_state=obs, done=mask)
 
         if timestep > init_timesteps and timestep % PLAY_STEPS == 0:
+            optimizer.zero_grad()
             # Sample batch of experience
             batch_state, batch_action, batch_reward, batch_next_state, batch_mask = memory.sample(batch_size * PLAY_STEPS)
             batch_state = torch.from_numpy(batch_state).to(device)
@@ -136,12 +137,9 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             Q_preds = policy_network(batch_state).gather(1, batch_action)
             loss = F.mse_loss(Q_preds, Q_estimate) # We can use MSE instead of Huber because we can directly clip gradients
             # Optimizer step
-            optimizer.zero_grad()
             loss.backward()
-            '''
             for param in policy_network.parameters():
                 param.grad.data.clamp_(-1, 1)
-            '''
             optimizer.step()
 
             # Copy the policy network to the target network
