@@ -14,6 +14,7 @@ from sneks.wrappers import NormalizeInt8
 import copy
 from tensorboardX import SummaryWriter
 import time
+import ptan
 
 # Local Imports
 from qnetwork import QNetwork
@@ -38,15 +39,7 @@ class MultidimWrapper(gym.Wrapper):
 
 def make_env(env_name, rnd_seed):
     env = gym.make(env_name)
-    env = EpisodicLifeEnv(env)
-    env = NoopResetEnv(env)
-    env = MaxAndSkipEnv(env)
-    env = FireResetEnv(env)
-    env = WarpFrame(env)
-    env = FrameStack(env, 4)
-    env = ClipRewardEnv(env)
-    env = ScaledFloatFrame(env)
-    env.seed(rnd_seed)
+    env = ptan.common.wrappers.wrap_dqn(env)
     return env
 
 def obs_to_pytorch_format(obs):
