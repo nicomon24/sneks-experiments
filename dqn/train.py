@@ -15,7 +15,7 @@ from tensorboardX import SummaryWriter
 
 EPSILON_START = 1.0
 EPSILON_STOP = 0.02
-PLAY_STEPS = 1
+PLAY_STEPS = 4
 
 def make_env(env_name, rnd_seed):
     env = gym.make(env_name)
@@ -66,7 +66,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
         epsilon = EPSILON_STOP + max(0, (EPSILON_START - EPSILON_STOP)*(epsilon_decay_last_step-timestep)/epsilon_decay_last_step)
         selector.epsilon = epsilon
         # Add one step to the buffer
-        buffer.populate(1)
+        buffer.populate(PLAY_STEPS)
         new_rewards = exp_source.pop_total_rewards()
         if new_rewards:
             ep_len = timestep - ep_start_step
