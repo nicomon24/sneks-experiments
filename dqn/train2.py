@@ -54,7 +54,7 @@ if __name__ == "__main__":
             optimizer.zero_grad()
             batch = buffer.sample(params['batch_size'])
             loss_v = common.calc_loss_dqn(batch, net, tgt_net.target_model, gamma=params['gamma'], cuda=args.cuda)
-            writer.add_scalar('loss', loss, frame_idx)
+            writer.add_scalar('loss', loss_v, frame_idx)
             loss_v.backward()
             optimizer.step()
 
