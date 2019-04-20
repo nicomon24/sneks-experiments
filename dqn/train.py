@@ -49,7 +49,7 @@ def unpack_batch(batch):
 
 def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
-            logdir='logs', init_timesteps=100):
+            logdir='logs', init_timesteps=100, save_every_steps=1e5):
 
     # Create the environment
     env = make_env(env_name, seed)
@@ -114,6 +114,9 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
 
         if timestep % update_target == 0:
             tgt_net.sync()
+
+        if timestep % save_every_steps == 0:
+            torch.save(net.state_dict(), 'qnetwork.pth')
 
 if __name__ == '__main__':
     # Check also for scientific notation
