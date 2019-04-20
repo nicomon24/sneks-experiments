@@ -4,15 +4,14 @@ import ptan
 import argparse
 import time
 import numpy as np
-import sneks
 
 import torch
 from torch import nn, optim
 import torch.nn.functional as F
+
 from qnetwork import QNetwork
+
 from tensorboardX import SummaryWriter
-from common.atari_wrappers import EpisodicLifeEnv, NoopResetEnv, MaxAndSkipEnv, FireResetEnv, WarpFrame, FrameStack, ClipRewardEnv, ScaledFloatFrame
-from common.pytorch_utils import ImageToPyTorch
 
 EPSILON_START = 1.0
 EPSILON_STOP = 0.02
@@ -20,16 +19,7 @@ PLAY_STEPS = 2
 
 def make_env(env_name, rnd_seed):
     env = gym.make(env_name)
-    #env = EpisodicLifeEnv(env)
-    #env = NoopResetEnv(env)
-    #env = MaxAndSkipEnv(env)
-    #env = FireResetEnv(env)
-    #env = WarpFrame(env)
-    #env = FrameStack(env, 4)
-    #env = ClipRewardEnv(env)
-    env = ScaledFloatFrame(env)
-    env = ImageToPyTorch(env)
-    env.seed(rnd_seed)
+    env = ptan.common.wrappers.wrap_dqn(env)
     return env
 
 def unpack_batch(batch):
@@ -47,24 +37,35 @@ def unpack_batch(batch):
     return np.array(states, copy=False), np.array(actions), np.array(rewards, dtype=np.float32), \
            np.array(dones, dtype=np.uint8), np.array(last_states, copy=False)
 
-def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
-            er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
-            logdir='logs', init_timesteps=100):
-
+def play_func(env_name, net, exp_queue, seed=42):
     # Create the environment
     env = make_env(env_name, seed)
     # Get PyTorch device
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # Create agent
+    selector = ptan.actions.EpsilonGreedyActionSelector(epsilon=EPSILON_START)
+    agent = ptan.agent.DQNAgent(net, selector, device=device)
+    exp_source = ptan.experience.ExperienceSourceFirstLast(env, agent, gamma=gamma, steps_count=1)
+    exp_source_iter = iter(exp_source)
+
+    .....
+
+
+
+def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
+            er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
+            logdir='logs', init_timesteps=100):
+
     # Create tensorboard writer
     writer = SummaryWriter(logdir)
 
     # Create the Q network
     net = QNetwork(env.observation_space, env.action_space).to(device)
     tgt_net = ptan.agent.TargetNet(net)
-    selector = ptan.actions.EpsilonGreedyActionSelector(epsilon=EPSILON_START)
-    agent = ptan.agent.DQNAgent(net, selector, device=device)
 
-    exp_source = ptan.experience.ExperienceSourceFirstLast(env, agent, gamma=gamma, steps_count=1)
+
+
+
     buffer = ptan.experience.ExperienceReplayBuffer(exp_source, buffer_size=er_capacity)
     optimizer = optim.Adam(net.parameters(), lr=lr)
 
