@@ -26,7 +26,7 @@ class QNetwork(nn.Module):
         # Get input and output shapes
         self.input_shape = observation_space.shape
         self.output_shape = action_space.n
-        print(self.input_shape)
+
         # Declare the convolutional layers: (kernels, kernel_size, stride)
         self.conv_layers = []
         # NCHW
@@ -41,7 +41,6 @@ class QNetwork(nn.Module):
             # Declare a conv layer followed by a relu
             self.conv_layers.append(nn.Sequential(nn.Conv2d(channels, kernels, kernel_size, stride), nn.ReLU()))
             size0 = conv2d_size_out(size0, kernel_size, stride)
-            print(size0)
             channels = kernels
 
         # Transform list of module to single sequential module
