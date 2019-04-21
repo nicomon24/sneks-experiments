@@ -53,7 +53,7 @@ class QNetwork(nn.Module):
         flattened_size = fc_size = size0 * size0 * channels
         fc_layers = []
         for fc_layer in arch_fc_layers:
-            fc_layer.append(nn.Sequential(nn.Linear(fc_size, fc_layer), nn.ReLU()))
+            fc_layers.append(nn.Sequential(nn.Linear(fc_size, fc_layer), nn.ReLU()))
             fc_size = fc_layer
         fc_layers.append(nn.Linear(fc_size, self.output_shape))
 
