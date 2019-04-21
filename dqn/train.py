@@ -49,7 +49,7 @@ def unpack_batch(batch):
 
 def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
-            logdir='logs', init_timesteps=100, save_every_steps=1e5):
+            logdir='logs', init_timesteps=100, save_every_steps=1e5, arch='nature'):
 
     # Create the environment
     env = make_env(env_name, seed)
@@ -59,7 +59,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
     writer = SummaryWriter(logdir)
 
     # Create the Q network
-    net = QNetwork(env.observation_space, env.action_space).to(device)
+    net = QNetwork(env.observation_space, env.action_space, arch=arch).to(device)
     tgt_net = ptan.agent.TargetNet(net)
     selector = ptan.actions.EpsilonGreedyActionSelector(epsilon=EPSILON_START)
     agent = ptan.agent.DQNAgent(net, selector, device=device)
@@ -116,7 +116,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             tgt_net.sync()
 
         if timestep % save_every_steps == 0:
-            torch.save(net.state_dict(), 'qnetwork.pth')
+            torch.save({'arch': net.arch, 'state_dict': net.state_dict()}, 'qnetwork.pth')
 
 if __name__ == '__main__':
     # Check also for scientific notation
@@ -126,6 +126,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--env_name', help='Environment to train on.', type=str, default='snek-rgb-16-v1')
+    parser.add_argument('--arch', help='Net architecture.', type=str, default='nature')
     parser.add_argument('--logdir', help='Directory to save the logs to.', type=str, default='logs/')
     #parser.add_argument('--num_envs', help='Number of parallel environments.', type=int, default=1)
     parser.add_argument('--timesteps', help='Number of parallel environments.', type=int_scientific, default=1)

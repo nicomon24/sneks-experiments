@@ -17,7 +17,7 @@ from tensorboardX import SummaryWriter
 from common.atari_wrappers import EpisodicLifeEnv, NoopResetEnv, MaxAndSkipEnv, FireResetEnv, WarpFrame, FrameStack, ClipRewardEnv, ScaledFloatFrame
 from common.pytorch_utils import ImageToPyTorch
 
-EPSILON = 0.02
+EPSILON = 0.0
 
 def make_env(env_name, rnd_seed):
     env = gym.make(env_name)
@@ -55,7 +55,7 @@ def play(env_name, seed=42, model=None):
             print("Episode:", ep_return, '\t\t', ep_len)
             obs, ep_return, ep_len = env.reset(), 0, 0
 
-        time.sleep(0.1)
+        time.sleep(0.05)
 
 if __name__ == '__main__':
     # Check also for scientific notation

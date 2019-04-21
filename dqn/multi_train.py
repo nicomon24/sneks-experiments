@@ -83,7 +83,7 @@ def play_func(env_name, net, exp_queue, seed=42, timesteps=1, epsilon_decay_last
 
 def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
-            logdir='logs', init_timesteps=100, save_every_steps=1e5):
+            logdir='logs', init_timesteps=100, save_every_steps=1e5, arch='nature'):
     # Multiprocessing method
     mp.set_start_method('spawn')
 
@@ -94,7 +94,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
 
     # Create the Q network
     _env = make_env(env_name, seed)
-    net = QNetwork(_env.observation_space, _env.action_space).to(device)
+    net = QNetwork(_env.observation_space, _env.action_space, arch=arch).to(device)
     tgt_net = ptan.agent.TargetNet(net)
     # Create buffer and optimizer
     buffer = ptan.experience.ExperienceReplayBuffer(experience_source=None, buffer_size=er_capacity)
@@ -158,6 +158,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--env_name', help='Environment to train on.', type=str, default='snek-rgb-16-v1')
+    parser.add_argument('--arch', help='Net architecture.', type=str, default='nature')
     parser.add_argument('--logdir', help='Directory to save the logs to.', type=str, default='logs/')
     #parser.add_argument('--num_envs', help='Number of parallel environments.', type=int, default=1)
     parser.add_argument('--timesteps', help='Number of parallel environments.', type=int_scientific, default=1)
