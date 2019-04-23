@@ -39,8 +39,9 @@ def play(env_name, seed=42, model=None):
     # Get PyTorch device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Create Qnetwork
-    net = QNetwork(env.observation_space, env.action_space, arch='smally').to(device)
-    net.load_state_dict(torch.load(model, map_location="cuda" if torch.cuda.is_available() else "cpu"))
+    state = torch.load(model, map_location="cuda" if torch.cuda.is_available() else "cpu")
+    net = QNetwork(env.observation_space, env.action_space, arch=state['arch']).to(device)
+    net.load_state_dict(state['state_dict'])
 
     obs, ep_return, ep_len = env.reset(), 0, 0
     while True:

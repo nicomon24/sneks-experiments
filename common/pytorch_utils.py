@@ -34,4 +34,4 @@ class ImageToPyTorch(gym.ObservationWrapper):
                                                 dtype=np.float32)
 
     def observation(self, observation):
-        return np.swapaxes(observation, 2, 0)
+        return np.transpose(x, (2, 0, 1))
