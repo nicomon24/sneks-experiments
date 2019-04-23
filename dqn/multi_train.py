@@ -148,8 +148,8 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             tgt_net.sync()
 
         if timestep % save_every_steps == 0:
-            torch.save(net.state_dict(), 'qnetwork-multi.pth')
-
+            torch.save({'arch': net.arch, 'state_dict': net.state_dict()}, 'qnetwork.pth')
+            
 if __name__ == '__main__':
     # Check also for scientific notation
     def int_scientific(x):
