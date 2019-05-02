@@ -65,6 +65,8 @@ class QNetwork(nn.Module):
             return [(32, 8, 4), (64, 4, 2), (64, 3, 1)], [512]
         elif arch == 'smally':
             return [(16, 3, 1)], [128]
+        elif arch == 'smally32':
+            return [(32, 3, 1)], [128]
         else:
             raise Exception('Unrecognized architecture.')
 
