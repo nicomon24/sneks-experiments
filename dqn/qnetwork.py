@@ -16,7 +16,7 @@ def conv2d_size_out(size, kernel_size = 1, stride = 1):
 
 class QNetwork(nn.Module):
 
-    def __init__(self, observation_space, action_space, arch='nature'):
+    def __init__(self, observation_space, action_space, arch='nature', dueling=False):
         super().__init__()
         # Check that observation space is box
         assert isinstance(observation_space, gym.spaces.Box), "Only works for box environments."
@@ -29,6 +29,7 @@ class QNetwork(nn.Module):
 
         # Get the arch specification
         self.arch = arch
+        self.dueling = dueling
         arch_conv_layers, arch_fc_layers = self.layers_from_arch(self.arch)
 
         # Declare the convolutional layers: (kernels, kernel_size, stride)
@@ -51,14 +52,16 @@ class QNetwork(nn.Module):
         self.conv_layers = nn.Sequential(*self.conv_layers)
 
         flattened_size = fc_size = size0 * size0 * channels
-        fc_layers = []
+        self.fc_layers = []
         for fc_layer in arch_fc_layers:
             fc_layers.append(nn.Sequential(nn.Linear(fc_size, fc_layer), nn.ReLU()))
             fc_size = fc_layer
-        fc_layers.append(nn.Linear(fc_size, self.output_shape))
+        self.fc_layers = nn.Sequential(*self.fc_layers)
 
-        # Declare the last linear layer, input size is the last conv layer flattened
-        self.head = nn.Sequential(*fc_layers)
+        # Last layer
+        self.head = nn.Linear(fc_size, self.output_shape)
+        if self.dueling:
+            self.value_head = nn.Linear(fc_size, 1)
 
     def layers_from_arch(self, arch):
         if arch == 'nature':
@@ -75,5 +78,19 @@ class QNetwork(nn.Module):
         conv_out = self.conv_layers(batch.float())
         # Flatten the output
         conv_out = conv_out.view(batch.size(0), -1)
-        # Pass through the last linear layer and return
-        return self.head(conv_out)
+        # Pass through the linear layers
+        lin_out = self.fc_layers(conv_out)
+
+        if dueling:
+            v = self.value_head(lin_out)
+            adv = self.head(lin_out)
+            return v + adv - adv.mean()
+        else:
+            return self.head(lin_out)
+
+    def get_extended_state(self):
+        return {
+            'arch': self.arch,
+            'dueling': self.dueling,
+            'state_dict': net.state_dict()
+        }

@@ -64,7 +64,7 @@ def play_func(env_name, net, exp_queue, seed=42, timesteps=1, epsilon_decay_last
     while timestep < timesteps:
         # Epsilon starts from EPSILON_START and linearly decreases till epsilon_decay_last_step to EPSILON_STOP
         epsilon = EPSILON_STOP + max(0, (EPSILON_START - EPSILON_STOP)*(epsilon_decay_last_step-timestep)/epsilon_decay_last_step)
-        #writer.add_scalar('internals/epsilon', epsilon, timestep)
+        writer.add_scalar('internals/epsilon', epsilon, timestep)
         selector.epsilon = epsilon
         # Do one step
         timestep += 1
@@ -83,7 +83,8 @@ def play_func(env_name, net, exp_queue, seed=42, timesteps=1, epsilon_decay_last
 
 def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
-            exp_name='test', init_timesteps=100, save_every_steps=1e5, arch='nature'):
+            exp_name='test', init_timesteps=100, save_every_steps=1e5, arch='nature',
+            dueling=False):
     # Multiprocessing method
     mp.set_start_method('spawn')
 
@@ -94,7 +95,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
 
     # Create the Q network
     _env = make_env(env_name, seed)
-    net = QNetwork(_env.observation_space, _env.action_space, arch=arch).to(device)
+    net = QNetwork(_env.observation_space, _env.action_space, arch=arch, dueling=dueling).to(device)
     tgt_net = ptan.agent.TargetNet(net)
     # Create buffer and optimizer
     buffer = ptan.experience.ExperienceReplayBuffer(experience_source=None, buffer_size=er_capacity)
@@ -170,6 +171,7 @@ if __name__ == '__main__':
     parser.add_argument('--update_target', help='Number of iterations for each target update.', type=int, default=16)
     parser.add_argument('--lr', help='Optimizer learning rate.', type=float, default=1e-3)
     parser.add_argument('--gamma', help='Discount factor for the MDP.', type=float, default=1.0)
+    parser.add_argument("--dueling", default=False, action="store_true", help="Dueling network.")
     args = parser.parse_args()
     # Call the train function with arguments
     train(**vars(args))
