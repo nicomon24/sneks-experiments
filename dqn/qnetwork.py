@@ -54,7 +54,7 @@ class QNetwork(nn.Module):
         flattened_size = fc_size = size0 * size0 * channels
         self.fc_layers = []
         for fc_layer in arch_fc_layers:
-            fc_layers.append(nn.Sequential(nn.Linear(fc_size, fc_layer), nn.ReLU()))
+            self.fc_layers.append(nn.Sequential(nn.Linear(fc_size, fc_layer), nn.ReLU()))
             fc_size = fc_layer
         self.fc_layers = nn.Sequential(*self.fc_layers)
 
@@ -81,7 +81,7 @@ class QNetwork(nn.Module):
         # Pass through the linear layers
         lin_out = self.fc_layers(conv_out)
 
-        if dueling:
+        if self.dueling:
             v = self.value_head(lin_out)
             adv = self.head(lin_out)
             return v + adv - adv.mean()
@@ -92,5 +92,5 @@ class QNetwork(nn.Module):
         return {
             'arch': self.arch,
             'dueling': self.dueling,
-            'state_dict': net.state_dict()
+            'state_dict': self.state_dict()
         }

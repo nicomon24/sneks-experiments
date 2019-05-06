@@ -17,7 +17,7 @@ from common.pytorch_utils import ImageToPyTorch
 from qnetwork import QNetwork
 
 EPSILON_START = 1.0
-EPSILON_STOP = 0.02
+EPSILON_STOP = 0.05
 PLAY_STEPS = 2
 
 def make_env(env_name, rnd_seed):
@@ -64,7 +64,7 @@ def play_func(env_name, net, exp_queue, seed=42, timesteps=1, epsilon_decay_last
     while timestep < timesteps:
         # Epsilon starts from EPSILON_START and linearly decreases till epsilon_decay_last_step to EPSILON_STOP
         epsilon = EPSILON_STOP + max(0, (EPSILON_START - EPSILON_STOP)*(epsilon_decay_last_step-timestep)/epsilon_decay_last_step)
-        writer.add_scalar('internals/epsilon', epsilon, timestep)
+        #writer.add_scalar('internals/epsilon', epsilon, timestep)
         selector.epsilon = epsilon
         # Do one step
         timestep += 1
@@ -83,7 +83,7 @@ def play_func(env_name, net, exp_queue, seed=42, timesteps=1, epsilon_decay_last
 
 def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
-            exp_name='test', init_timesteps=100, save_every_steps=1e5, arch='nature',
+            exp_name='test', init_timesteps=100, save_every_steps=1e4, arch='nature',
             dueling=False):
     # Multiprocessing method
     mp.set_start_method('spawn')
@@ -149,7 +149,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             tgt_net.sync()
 
         if timestep % save_every_steps == 0:
-            torch.save({'arch': net.arch, 'state_dict': net.state_dict()}, exp_name + '.pth')
+            torch.save(net.get_extended_state(), exp_name + '.pth')
 
 if __name__ == '__main__':
     # Check also for scientific notation
