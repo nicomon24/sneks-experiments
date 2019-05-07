@@ -85,18 +85,18 @@ def play_func(env_name, net, exp_queue, seed=42, timesteps=1, epsilon_schedule=(
     """
         Function called to play episodes in parallel.
     """
+    # Parse epsilon config
+    epsilon_start, epsilon_stop, epsilon_decay_stop = epsilon_schedule
     # Create the environment
     env = make_env(env_name, seed)
     # Get PyTorch device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Create agent
-    selector = ptan.actions.EpsilonGreedyActionSelector(epsilon=EPSILON_START)
+    selector = ptan.actions.EpsilonGreedyActionSelector(epsilon=epsilon_start)
     agent = ptan.agent.DQNAgent(net, selector, device=device)
     # Create experience source, i.e. the wrapped environment.
     exp_source = ptan.experience.ExperienceSourceFirstLast(env, agent, gamma=gamma, steps_count=1)
     exp_source_iter = iter(exp_source)
-    # Parse epsilon config
-    epsilon_start, epsilon_stop, epsilon_decay_stop = epsilon_schedule
 
     # Start the playing loop
     timestep, ep_start_step, ep_start_time = 0, 0, time.time()
