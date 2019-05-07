@@ -34,7 +34,7 @@ def base_config():
     timesteps = 1e6                     # Training timesteps
     init_timesteps = 1e4                # Timestep to bootstrap
     seed = 42                           # Random seed
-    er_capacity = 1e5                   # Capacity of †he experience replay
+    er_capacity = int(1e5)              # Capacity of †he experience replay
     epsilon_start = 1.0                 # Starting epsilon
     epsilon_stop = 0.05                 # Final epsilon after decay
     epsilon_decay_stop = 1e5            # Timestep at which we end decay
