@@ -15,7 +15,7 @@ class Logger():
         self.loggers = {}
         for t in loggers:
             if t == 'tensorboard':
-                self.loggers['tensorboard'] = SummaryWriter('runs/' + exp_name)
+                self.loggers['tensorboard'] = SummaryWriter('runs/' + experiment_name)
             elif t == 'sacred':
                 assert kwargs['sacred_run'] is not None, "Need to pass a sacred run."
                 self.loggers['sacred'] = kwargs['sacred_run']
