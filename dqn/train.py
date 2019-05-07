@@ -149,7 +149,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             continue
 
         scheduler.step()
-        logger.log_kv('internals/lr', scheduler.get_lr(), timestep)
+        logger.log_kv('internals/lr', scheduler.get_lr()[0], timestep)
         # Get a batch from experience replay
         optimizer.zero_grad()
         batch = buffer.sample(batch_size * PLAY_STEPS)
