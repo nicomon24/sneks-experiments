@@ -14,20 +14,13 @@ from torch import nn, optim
 import torch.nn.functional as F
 from qnetwork import QNetwork
 from tensorboardX import SummaryWriter
-from common.atari_wrappers import EpisodicLifeEnv, NoopResetEnv, MaxAndSkipEnv, FireResetEnv, WarpFrame, FrameStack, ClipRewardEnv, ScaledFloatFrame
+from common.atari_wrappers import ScaledFloatFrame
 from common.pytorch_utils import ImageToPyTorch
 
 EPSILON = 0.0
 
 def make_env(env_name, rnd_seed):
     env = gym.make(env_name)
-    #env = EpisodicLifeEnv(env)
-    #env = NoopResetEnv(env)
-    #env = MaxAndSkipEnv(env)
-    #env = FireResetEnv(env)
-    #env = WarpFrame(env)
-    #env = FrameStack(env, 4)
-    #env = ClipRewardEnv(env)
     env = ScaledFloatFrame(env)
     env = ImageToPyTorch(env)
     env.seed(rnd_seed)
