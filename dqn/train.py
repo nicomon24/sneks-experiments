@@ -119,7 +119,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
     # Create buffer and optimizer
     buffer = ptan.experience.ExperienceReplayBuffer(experience_source=None, buffer_size=er_capacity)
     optimizer = optim.Adam(net.parameters(), lr=lr)
-    lr_scheduler = StepLR(optimizer, step_size=LR_STEPS, gamma=0.99)
+    scheduler = StepLR(optimizer, step_size=LR_STEPS, gamma=0.99)
 
     # Multiprocessing queue
     exp_queue = mp.Queue(maxsize=PLAY_STEPS * 2)
