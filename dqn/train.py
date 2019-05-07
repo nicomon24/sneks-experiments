@@ -57,7 +57,7 @@ def unpack_batch(batch):
     return np.array(states, copy=False), np.array(actions), np.array(rewards, dtype=np.float32), \
            np.array(dones, dtype=np.uint8), np.array(last_states, copy=False)
 
-def play_func(env_name, net, exp_queue, logger, seed=42, timesteps=1, epsilon_decay_last_step=1000, gamma=1.0):
+def play_func(env_name, net, exp_queue, seed=42, timesteps=1, epsilon_decay_last_step=1000, gamma=1.0):
     """
         Function called to play episodes in parallel.
     """
@@ -77,22 +77,23 @@ def play_func(env_name, net, exp_queue, logger, seed=42, timesteps=1, epsilon_de
     while timestep < timesteps:
         # Epsilon starts from EPSILON_START and linearly decreases till epsilon_decay_last_step to EPSILON_STOP
         epsilon = EPSILON_STOP + max(0, (EPSILON_START - EPSILON_STOP)*(epsilon_decay_last_step-timestep)/epsilon_decay_last_step)
-        logger.log_kv('internals/epsilon', epsilon, timestep)
         selector.epsilon = epsilon
         # Do one step
         timestep += 1
         exp = next(exp_source_iter)
         new_rewards = exp_source.pop_total_rewards()
-        ep_info = None
+        info = { 'epsilon': (epsilon, timestep) }
         # Check if the episode has ended
         if new_rewards:
             ep_len = timestep - ep_start_step
             speed = (ep_len) / (time.time() - ep_start_time)
             ep_start_step, ep_start_time = timestep, time.time()
-            ep_info = (new_rewards[0], ep_len, speed)
-        exp_queue.put((exp, ep_info))
+            info['ep_reward'] = new_rewards[0]
+            info['ep_length'] = ep_len
+            info['speed'] = speed
+        exp_queue.put((exp, info))
     # End
-    exp_queue.put((None, None))
+    exp_queue.put((None, {}))
 
 def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
@@ -122,7 +123,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
 
     # Multiprocessing queue
     exp_queue = mp.Queue(maxsize=PLAY_STEPS * 2)
-    play_proc = mp.Process(target=play_func, args=(env_name, net, exp_queue, logger, seed, timesteps, epsilon_decay_last_step, gamma))
+    play_proc = mp.Process(target=play_func, args=(env_name, net, exp_queue, seed, timesteps, epsilon_decay_last_step, gamma))
     play_proc.start()
 
     # Main training loop
@@ -132,15 +133,16 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
 
         # Query the environments and log results if the episode has ended
         for _ in range(PLAY_STEPS):
-            exp, ep_info = exp_queue.get()
+            exp, info = exp_queue.get()
             if exp is None:
                 play_proc.join()
                 break
             buffer._add(exp)
-            if ep_info is not None:
-                logger.log_kv('performance/return', ep_info[0], timestep)
-                logger.log_kv('performance/length', ep_info[1], timestep)
-                logger.log_kv('performance/speed', ep_info[2], timestep)
+            logger.log_kv('internals/epsilon', info['epsilon'][0], info['epsilon'][1])
+            if 'ep_reward' in info.keys():
+                logger.log_kv('performance/return', info['ep_reward'], timestep)
+                logger.log_kv('performance/length', info['ep_length'], timestep)
+                logger.log_kv('performance/speed', info['speed'], timestep)
 
         # Check if we are in the starting phase
         if len(buffer) < init_timesteps:
