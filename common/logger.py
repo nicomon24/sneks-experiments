@@ -23,10 +23,10 @@ class Logger():
                 raise Exception('Unrecognized logger.')
 
     def log_kv(self, key, value, index):
-        for key, value in self.loggers.items():
-            if key == 'tensorboard':
-                self.loggers['tensorboard'].add_scalar(key, value, index)
-            elif key == 'sacred':
-                self.loggers['sacred'].log_scalar(key, value)
+        for logger_type, logger in self.loggers.items():
+            if logger_type == 'tensorboard':
+                logger.add_scalar(key, value, index)
+            elif logger_type == 'sacred':
+                logger.log_scalar(key, value)
             else:
                 raise Exception('Unrecognized logger.')
