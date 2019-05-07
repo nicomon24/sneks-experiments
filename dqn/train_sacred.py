@@ -6,6 +6,9 @@ import time
 import numpy as np
 import sneks
 
+from sacred import Experiment
+from sacred.observers import
+
 import torch
 from torch import nn, optim
 import torch.nn.functional as F
@@ -20,15 +23,16 @@ EPSILON_START = 1.0
 EPSILON_STOP = 0.05
 PLAY_STEPS = 2
 
+@ex.config
+def custom_config():
+    env_name = 'snek-rgb-16-v1'
+    arch = 'nature'
+    exp_name = 'test'
+    timesteps = 1e6
+    
+
 def make_env(env_name, rnd_seed):
     env = gym.make(env_name)
-    #env = EpisodicLifeEnv(env)
-    #env = NoopResetEnv(env)
-    #env = MaxAndSkipEnv(env)
-    #env = FireResetEnv(env)
-    #env = WarpFrame(env)
-    #env = FrameStack(env, 4)
-    #env = ClipRewardEnv(env)
     env = ScaledFloatFrame(env)
     env = ImageToPyTorch(env)
     env.seed(rnd_seed)
@@ -150,6 +154,10 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
 
         if timestep % save_every_steps == 0:
             torch.save(net.get_extended_state(), exp_name + '.pth')
+
+@ex.automain
+def main(env_name, arch):
+
 
 if __name__ == '__main__':
     # Check also for scientific notation

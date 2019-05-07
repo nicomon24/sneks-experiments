@@ -8,8 +8,7 @@ This repository contains a set of different solutions and studies for the many [
 
 ## Draft of Roadmap
 1. Implementation of vanilla DQN and tests on different environments.
-2. Implementation of PPO and tests on different environments.
-3. Basic multi-agent competitive setting: learning by self-play
+2. Basic multi-agent competitive setting: learning by self-play
 
 ## Ideas
 - Perception studies: is the trained policy able to understand a particular scene? Image reconstruction?
