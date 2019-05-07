@@ -31,22 +31,22 @@ def base_config():
     experiment_name = os.environ.get('EXPERIMENT_NAME', 'test')    # Experiment name
     env_name = 'snek-rgb-16-v1'         # Environment to play
     arch = 'nature'                     # Architecture for the network
-    timesteps = 1e6                     # Training timesteps
-    init_timesteps = 1e4                # Timestep to bootstrap
+    timesteps = int(1e6)                # Training timesteps
+    init_timesteps = int(1e4)           # Timestep to bootstrap
     seed = 42                           # Random seed
     er_capacity = int(1e5)              # Capacity of †he experience replay
     epsilon_start = 1.0                 # Starting epsilon
     epsilon_stop = 0.05                 # Final epsilon after decay
-    epsilon_decay_stop = 1e5            # Timestep at which we end decay
+    epsilon_decay_stop = int(1e5)       # Timestep at which we end decay
     batch_size = 16                     # Batch size
-    target_sync = 1e3                   # How frequently we sync target net
+    target_sync = int(1e3)              # How frequently we sync target net
     lr = 1e-3                           # Starting learning rate
     gamma = 0.99                        # Discount factor
     dueling = False                     # Use dueling network
     play_steps = 2                      # How many play steps per iteration
-    lr_steps = 1e4                      # How frequently we decay LR
+    lr_steps = int(1e4)                 # How frequently we decay LR
     lr_gamma = 0.99                     # Decay factor for LR
-    save_steps = 5e4                    # How frequently we save a checkpoint
+    save_steps = int(5e4)               # How frequently we save a checkpoint
 
 def make_env(env_name, rnd_seed):
     """
