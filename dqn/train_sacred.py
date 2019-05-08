@@ -130,6 +130,10 @@ def train(env_name, arch, timesteps=1, init_timesteps=0, seed=42, er_capacity=1,
         Main training function. Calls the subprocesses to get experience and
         train the network.
     """
+    # Casting params which are expressable in scientific notation
+    timesteps, er_capacity, epsilon_decay_stop = map(int, [timesteps, er_capacity, epsilon_decay_stop])
+    print(dueling)
+
     # Multiprocessing method
     mp.set_start_method('spawn')
 
