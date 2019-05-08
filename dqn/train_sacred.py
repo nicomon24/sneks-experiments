@@ -207,7 +207,7 @@ def train(env_name, arch, timesteps=1, init_timesteps=0, seed=42, er_capacity=1,
         optimizer.step()
 
         # Check if the target network need to be synched
-        if timestep % update_target == 0:
+        if timestep % target_sync == 0:
             tgt_net.sync()
 
         # Check if we need to save a checkpoint
