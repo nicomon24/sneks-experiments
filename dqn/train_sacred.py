@@ -27,7 +27,7 @@ if os.environ.get('EXPERIMENT_NAME') is not None:
 else:
     ex = Experiment('DQN')
 
-ex.observers.append(MongoObserver.create(url=os.environ.get('SACRED_MONGO_URL')))
+ex.observers.append(MongoObserver.create(url=os.environ.get('SACRED_MONGO_URL'),db_name='sacred_nico'))
 
 @ex.config
 def base_config():
