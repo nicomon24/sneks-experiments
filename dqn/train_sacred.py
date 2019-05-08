@@ -19,7 +19,7 @@ from common.logger import Logger
 from qnetwork import QNetwork
 # Sacred imports
 from sacred import Experiment
-from sacred.observers import MongoObserver
+from sacred.observers import FileStorageObserver
 
 # ======== SACRED CONFIG ========
 if os.environ.get('EXPERIMENT_NAME') is not None:
@@ -27,7 +27,7 @@ if os.environ.get('EXPERIMENT_NAME') is not None:
 else:
     ex = Experiment('DQN')
 
-ex.observers.append(MongoObserver.create(url=os.environ.get('SACRED_MONGO_URL'),db_name='sacred_nico'))
+ex.observers.append(FileStorageObserver.create(os.environ.get('SACRED_RUNS_DIRECTORY')))
 
 @ex.config
 def base_config():
