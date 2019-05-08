@@ -131,7 +131,9 @@ def train(env_name, arch, timesteps=1, init_timesteps=0, seed=42, er_capacity=1,
         train the network.
     """
     # Casting params which are expressable in scientific notation
-    timesteps, er_capacity, epsilon_decay_stop = map(int, [timesteps, er_capacity, epsilon_decay_stop])
+    def int_scientific(x):
+        return int(float(x))
+    timesteps, er_capacity, epsilon_decay_stop = map(int_scientific, [timesteps, er_capacity, epsilon_decay_stop])
     print(dueling)
 
     # Multiprocessing method
