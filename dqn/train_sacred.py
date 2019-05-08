@@ -133,7 +133,10 @@ def train(env_name, arch, timesteps=1, init_timesteps=0, seed=42, er_capacity=1,
     # Casting params which are expressable in scientific notation
     def int_scientific(x):
         return int(float(x))
-    timesteps, er_capacity, epsilon_decay_stop = map(int_scientific, [timesteps, er_capacity, epsilon_decay_stop])
+    timesteps, init_timesteps = map(int_scientific, [timesteps, init_timesteps])
+    lr_steps, epsilon_decay_stop = map(int_scientific, [lr_steps, epsilon_decay_stop])
+    er_capacity, target_sync, save_steps = map(int_scientific, [er_capacity, target_sync, save_steps])
+    lr = float(lr)
 
     # Multiprocessing method
     mp.set_start_method('spawn')
