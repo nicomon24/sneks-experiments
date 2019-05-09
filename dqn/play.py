@@ -26,7 +26,7 @@ def make_env(env_name, rnd_seed):
     env.seed(rnd_seed)
     return env
 
-def play(env_name, seed=42, model=None):
+def play(env_name, seed=42, model=None, render=False):
     # Create the environment
     env = make_env(env_name, seed)
     # Get PyTorch device
@@ -36,20 +36,26 @@ def play(env_name, seed=42, model=None):
     net = QNetwork(env.observation_space, env.action_space, arch=state['arch'], dueling=state.get('dueling', False)).to(device)
     net.load_state_dict(state['state_dict'])
 
+    total_returns = []
     obs, ep_return, ep_len = env.reset(), 0, 0
-    while True:
+    while len(total_returns) < 42:
 
         action = net(torch.from_numpy(np.expand_dims(obs, 0)).to(device)).argmax(dim=1)[0]
         obs, reward, done , _ = env.step(action)
-        env.render()
+        if render:
+            env.render()
         ep_return += reward
         ep_len += 1
 
         if done:
+            total_returns.append(ep_return)
             print("Episode:", ep_return, '\t\t', ep_len)
             obs, ep_return, ep_len = env.reset(), 0, 0
 
-        time.sleep(0.05)
+        if render:
+            time.sleep(0.01)
+
+    print("Mean return", sum(total_returns)/len(total_returns))
 
 if __name__ == '__main__':
     # Check also for scientific notation
