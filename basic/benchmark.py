@@ -12,6 +12,51 @@ import numpy as np
 
 DIRECTIONS = [np.array([-1,0]), np.array([0,1]), np.array([1,0]), np.array([0,-1])]
 
+class HighlanderPolicy():
+    """
+        Random policy which avoids to bump into walls (does not check auto-bumping)
+    """
+
+    def __init__(self, size=16):
+        self.size = size
+        self.previous_head = None
+
+    def act(self, observation, walls=1):
+        # Get snek position and current direction
+        head_y, head_x = map(lambda x: x[0], np.where(observation[:,:,1] == 77))
+        actions = [0, 1, 2, 3]
+        # Check left border
+        if head_x <= walls:
+            actions.remove(3)
+            # Check also if we are moving horizontally, if so also don't go right
+            if head_y == self.previous_head[0]:
+                actions.remove(1)
+        # Check upper border
+        if head_y <= walls:
+            actions.remove(0)
+            # Check also if we are moving vertically
+            if head_x == self.previous_head[1]:
+                actions.remove(2)
+        # Check right border
+        if head_x >= self.size - 1 - walls:
+            actions.remove(1)
+            # Check also if moving horizontally
+            if head_y == self.previous_head[0]:
+                actions.remove(3)
+        # Check bottom border
+        if head_y >= self.size - 1 - walls:
+            actions.remove(2)
+            # Check also moving vertically
+            if head_x == self.previous_head[1]:
+                actions.remove(0)
+
+        if len(actions) > 0:
+            a = np.random.choice(actions)
+        else:
+            a = 0
+        self.previous_head = (head_y, head_x)
+        return a
+
 class BasicPolicy():
 
     def __init__(self, size=16):
@@ -61,7 +106,7 @@ if __name__== '__main__':
     import sneks
     import time
 
-    pi = BasicPolicy()
+    pi = HighlanderPolicy()
 
     env = gym.make('snek-rgb-16-v1')
     obs = env.reset()
