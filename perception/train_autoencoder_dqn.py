@@ -79,6 +79,7 @@ def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3):
             original = vutils.make_grid(batch[:4], normalize=True, scale_each=True)
             reco = vutils.make_grid(reconstruction[:4], normalize=True, scale_each=True)
             writer.add_image('original', original, i)
+            writer.add_image('reconstruction', reco, i)
 
 if __name__ == '__main__':
     # Check also for scientific notation
