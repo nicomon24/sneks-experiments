@@ -84,6 +84,10 @@ def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch
             writer.add_image('original', original, i)
             writer.add_image('reconstruction', reco, i)
 
+    # Save the decoder
+    output_name = model.split('.')[0] + '_decoder' + '.pth'
+    torch.save(dqn_decoder, output_name)
+
 if __name__ == '__main__':
     # Check also for scientific notation
     def int_scientific(x):
