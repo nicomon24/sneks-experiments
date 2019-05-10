@@ -65,6 +65,8 @@ def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch
     # Training loop
     data_generator = generate_batch(env, net, device, batch_size)
     for i in range(iterations):
+        scheduler.step()
+        writer.add_scalar('reconstruction/lr', scheduler.get_lr()[0], i)
         optimizer.zero_grad()
         # Get batch and AE reconstruction
         batch = next(data_generator)
@@ -74,7 +76,6 @@ def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch
         loss.backward()
         optimizer.step()
         writer.add_scalar('reconstruction/loss', loss, i)
-        writer.add_scalar('reconstruction/lr', scheduler.get_lr()[0], i)
 
         # Visualize
         if i % 50 == 0:
