@@ -21,8 +21,6 @@ from common.atari_wrappers import ScaledFloatFrame
 from common.pytorch_utils import ImageToPyTorch
 from perception.dqn_decoder import DqnDecoder
 
-import matplotlib.pyplot as plt
-
 EPSILON = 0.0
 
 def make_env(env_name, rnd_seed):
