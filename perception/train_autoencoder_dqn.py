@@ -59,6 +59,7 @@ def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch
     # Create the decoder and the optimizer
     dqn_decoder = DqnDecoder(net).to(device)
     optimizer = optim.Adam(dqn_decoder.parameters(), lr=lr)
+    scheduler = StepLR(optimizer, step_size=100, gamma=0.99)
 
     # Training loop
     data_generator = generate_batch(env, net, device, batch_size)
@@ -72,6 +73,7 @@ def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch
         loss.backward()
         optimizer.step()
         writer.add_scalar('reconstruction/loss', loss, i)
+        writer.add_scalar('reconstruction/lr', scheduler.get_lr()[0], i)
 
         # Visualize
         if i % 50 == 0:
