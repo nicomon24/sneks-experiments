@@ -20,6 +20,7 @@ from tensorboardX import SummaryWriter
 from common.atari_wrappers import ScaledFloatFrame
 from common.pytorch_utils import ImageToPyTorch
 from perception.dqn_decoder import DqnDecoder
+from torch.optim.lr_scheduler import StepLR
 
 EPSILON = 0.0
 
