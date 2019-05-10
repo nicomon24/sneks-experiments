@@ -44,7 +44,7 @@ def generate_batch(env, dqn, device, batch_size=16):
         if done:
             obs = env.reset()
 
-def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3):
+def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch_size=16):
     # Create the environment
     env = make_env(env_name, seed)
     # Get PyTorch device
@@ -61,7 +61,7 @@ def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3):
     optimizer = optim.Adam(dqn_decoder.parameters(), lr=lr)
 
     # Training loop
-    data_generator = generate_batch(env, net, device)
+    data_generator = generate_batch(env, net, device, batch_size)
     for i in range(iterations):
         optimizer.zero_grad()
         # Get batch and AE reconstruction
@@ -91,6 +91,7 @@ if __name__ == '__main__':
     parser.add_argument('--iterations', help='Number of training iterations', type=int_scientific, default=10)
     parser.add_argument('--model', help='Path of the model to load.', type=str, default=None)
     parser.add_argument('--seed', help='Random seed.', type=int, default=42)
+    parser.add_argument('--batch_size', help='Batch size', type=int, default=16)
     parser.add_argument('--lr', help='Learning rate.', type=float, default=1e-3)
     args = parser.parse_args()
     # Call the train function with arguments
