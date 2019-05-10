@@ -26,7 +26,7 @@ def make_env(env_name, rnd_seed):
     env.seed(rnd_seed)
     return env
 
-def play(env_name, seed=42, model=None, render=False):
+def play(env_name, seed=42, model=None, render=True):
     # Create the environment
     env = make_env(env_name, seed)
     # Get PyTorch device
