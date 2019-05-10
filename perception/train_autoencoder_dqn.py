@@ -59,7 +59,7 @@ def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch
     # Create the decoder and the optimizer
     dqn_decoder = DqnDecoder(net).to(device)
     optimizer = optim.Adam(dqn_decoder.parameters(), lr=lr)
-    scheduler = StepLR(optimizer, step_size=100, gamma=0.99)
+    scheduler = StepLR(optimizer, step_size=1000, gamma=0.5)
 
     # Training loop
     data_generator = generate_batch(env, net, device, batch_size)
