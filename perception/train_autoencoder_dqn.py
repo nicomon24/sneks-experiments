@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
 '''
     We create an auto-encoder starting from a trained network. We then train it
     on observations from the environment gathered from playing the policy.
 '''
-#!/usr/bin/env python3
+
 import gym
 import ptan
 import argparse
