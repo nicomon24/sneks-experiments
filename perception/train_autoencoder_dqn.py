@@ -34,7 +34,7 @@ def generate_batch(env, dqn, device, batch_size=16):
     obs = env.reset()
     buffer = []
     while True:
-        torch_obs = torch.from_numpy(np.expand_dims(obs, 0))
+        torch_obs = torch.from_numpy(np.expand_dims(obs, 0)).to(device)
         buffer.append(torch_obs)
         if len(buffer) == batch_size:
             yield torch.cat(buffer, dim=0)
