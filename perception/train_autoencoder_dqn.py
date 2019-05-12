@@ -86,7 +86,7 @@ def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch
 
     # Save the decoder
     output_name = model.split('/')[-1].split('.')[0] + '_decoder' + '.pth'
-    torch.save(dqn_decoder, output_name)
+    torch.save(dqn_decoder.state_dict(), output_name)
 
 if __name__ == '__main__':
     # Check also for scientific notation
