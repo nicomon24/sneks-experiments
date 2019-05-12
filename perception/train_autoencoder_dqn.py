@@ -45,7 +45,7 @@ def generate_batch(env, dqn, device, batch_size=16):
         if done:
             obs = env.reset()
 
-def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch_size=16):
+def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch_size=16, loss_base=2):
     # Create the environment
     env = make_env(env_name, seed)
     # Get PyTorch device
@@ -72,7 +72,7 @@ def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch
         batch = next(data_generator)
         reconstruction = dqn_decoder(batch, net)
         # Compute loss and backpropagate
-        loss = ((batch - reconstruction) ** 2).sum() / batch.size(0)
+        loss = ((batch - reconstruction) ** loss_base).sum() / batch.size(0)
         loss.backward()
         optimizer.step()
         writer.add_scalar('reconstruction/loss', loss, i)
@@ -101,6 +101,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', help='Random seed.', type=int, default=42)
     parser.add_argument('--batch_size', help='Batch size', type=int, default=16)
     parser.add_argument('--lr', help='Learning rate.', type=float, default=1e-3)
+    parser.add_argument('--loss_base', help='Loss cardinality.', type=int, default=2)
     args = parser.parse_args()
     # Call the train function with arguments
     train(**vars(args))
