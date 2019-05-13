@@ -72,7 +72,7 @@ def train(env_name, iterations, seed=42, model=None, render=True, lr=1e-3, batch
         batch = next(data_generator)
         reconstruction = dqn_decoder(batch, net)
         # Compute loss and backpropagate
-        loss = ((batch - reconstruction) ** loss_base).sum() / batch.size(0)
+        loss = ((batch - reconstruction) ** loss_base).abs().sum() / batch.size(0)
         loss.backward()
         optimizer.step()
         writer.add_scalar('reconstruction/loss', loss, i)
