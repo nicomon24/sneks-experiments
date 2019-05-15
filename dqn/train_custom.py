@@ -142,7 +142,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
                 # Reset counters
                 current_reward[i] = 0.0
                 current_len[i] = 0
-                current_time = time.time()
+                current_time[i] = time.time()
 
         # Update number of steps
         timestep += play_steps
