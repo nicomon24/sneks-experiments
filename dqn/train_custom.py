@@ -21,7 +21,6 @@ from experience import ExperienceReplay
 # ======== CONSTANTS ========
 EPSILON_START = 1.0
 EPSILON_STOP = 0.05
-PLAY_STEPS = 2
 LR_STEPS = 1e4
 
 def make_env(env_name, rnd_seed):
@@ -60,7 +59,6 @@ def play_func(id, env_name, obs_queue, transition_queue, action_queue, seed=42):
             return
         # Perform the action
         obs, r, done, _ = env.step(action)
-        env.render()
         # Transition to queue
         transition_queue.put((id, prev_obs, action, r, done, obs))
         # Reset environment if done
@@ -70,7 +68,7 @@ def play_func(id, env_name, obs_queue, transition_queue, action_queue, seed=42):
 def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
             exp_name='test', init_timesteps=100, save_every_steps=1e4, arch='nature',
-            dueling=False):
+            dueling=False, play_steps=2):
     """
         Main training function. Calls the subprocesses to get experience and
         train the network.
@@ -97,10 +95,10 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
     scheduler = StepLR(optimizer, step_size=LR_STEPS, gamma=0.99)
 
     # Multiprocessing queue
-    obs_queue = mp.Queue(maxsize=PLAY_STEPS)
-    transition_queue = mp.Queue(maxsize=PLAY_STEPS)
+    obs_queue = mp.Queue(maxsize=play_steps)
+    transition_queue = mp.Queue(maxsize=play_steps)
     workers, action_queues = [], []
-    for i in range(PLAY_STEPS):
+    for i in range(play_steps):
         action_queue = mp.Queue(maxsize=1)
         _seed = seed + i * 1000
         play_proc = mp.Process(target=play_func, args=(i, env_name, obs_queue, transition_queue, action_queue, _seed))
@@ -110,26 +108,26 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
 
     # Vars to keep track of performances and time
     timestep = 0
-    current_reward, current_len = np.zeros(PLAY_STEPS), np.zeros(PLAY_STEPS, dtype=np.int64)
-    current_time = [time.time() for _ in range(PLAY_STEPS)]
+    current_reward, current_len = np.zeros(play_steps), np.zeros(play_steps, dtype=np.int64)
+    current_time = [time.time() for _ in range(play_steps)]
     # Training loop
     while timestep < timesteps:
         # Compute the current epsilon
         epsilon = EPSILON_STOP + max(0, (EPSILON_START - EPSILON_STOP)*(epsilon_decay_last_step-timestep)/epsilon_decay_last_step)
         logger.log_kv('internals/epsilon', epsilon, timestep)
         # Gather observation N_STEPS
-        ids, obs_batch = zip(*[obs_queue.get() for _ in range(PLAY_STEPS)])
+        ids, obs_batch = zip(*[obs_queue.get() for _ in range(play_steps)])
         # Pre-process observation_batch for PyTorch
         obs_batch = torch.from_numpy(np.array(obs_batch)).to(device)
         # Select greedy action from policy, apply epsilon-greedy selection
-        greedy_actions = net(obs_batch).argmax(dim=1).detach().numpy()
+        greedy_actions = net(obs_batch).argmax(dim=1).cpu().detach().numpy()
         probs = torch.rand(greedy_actions.shape)
         actions = np.where(probs < epsilon, _env.action_space.sample(), greedy_actions)
         # Send actions
         for id, action in zip(ids, actions):
             action_queues[id].put(action)
         # Add transitions to experience replay
-        transitions = [transition_queue.get() for _ in range(PLAY_STEPS)]
+        transitions = [transition_queue.get() for _ in range(play_steps)]
         buffer.pushTransitions(transitions)
         # Check if we need to update rewards, time and lengths
         _, _, _, reward, done, _ = zip(*transitions)
@@ -147,7 +145,7 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
                 current_time = time.time()
 
         # Update number of steps
-        timestep += PLAY_STEPS
+        timestep += play_steps
 
         # Check if we are in the warm-up phase, otherwise go on with policy update
         if timestep < init_timesteps:
@@ -204,6 +202,7 @@ if __name__ == '__main__':
     parser.add_argument('--er_capacity', help='Experience replay capacity.', type=int_scientific, default=1e4)
     parser.add_argument('--epsilon_decay_last_step', help='Step at which the epsilon plateau is reached.', type=int_scientific, default=1e4)
     parser.add_argument('--batch_size', help='Experience batch size.', type=int, default=16)
+    parser.add_argument('--play_steps', help='Number of parallel environments.', type=int, default=2)
     parser.add_argument('--update_target', help='Number of iterations for each target update.', type=int, default=16)
     parser.add_argument('--lr', help='Optimizer learning rate.', type=float, default=1e-3)
     parser.add_argument('--gamma', help='Discount factor for the MDP.', type=float, default=1.0)
