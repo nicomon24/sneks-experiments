@@ -68,7 +68,7 @@ def play_func(id, env_name, obs_queue, transition_queue, action_queue, seed=42):
 def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
             er_capacity=1e4, batch_size=16, lr=1e-3, gamma=1.0,  update_target=16,
             exp_name='test', init_timesteps=100, save_every_steps=1e4, arch='nature',
-            dueling=False, play_steps=2):
+            dueling=False, play_steps=2, n_jobs=2):
     """
         Main training function. Calls the subprocesses to get experience and
         train the network.
@@ -95,10 +95,10 @@ def train(env_name, seed=42, timesteps=1, epsilon_decay_last_step=1000,
     scheduler = StepLR(optimizer, step_size=LR_STEPS, gamma=0.99)
 
     # Multiprocessing queue
-    obs_queue = mp.Queue(maxsize=play_steps)
-    transition_queue = mp.Queue(maxsize=play_steps)
+    obs_queue = mp.Queue(maxsize=n_jobs)
+    transition_queue = mp.Queue(maxsize=n_jobs)
     workers, action_queues = [], []
-    for i in range(play_steps):
+    for i in range(n_jobs):
         action_queue = mp.Queue(maxsize=1)
         _seed = seed + i * 1000
         play_proc = mp.Process(target=play_func, args=(i, env_name, obs_queue, transition_queue, action_queue, _seed))
@@ -202,7 +202,8 @@ if __name__ == '__main__':
     parser.add_argument('--er_capacity', help='Experience replay capacity.', type=int_scientific, default=1e4)
     parser.add_argument('--epsilon_decay_last_step', help='Step at which the epsilon plateau is reached.', type=int_scientific, default=1e4)
     parser.add_argument('--batch_size', help='Experience batch size.', type=int, default=16)
-    parser.add_argument('--play_steps', help='Number of parallel environments.', type=int, default=2)
+    parser.add_argument('--play_steps', help='Number of steps per iteration.', type=int, default=2)
+    parser.add_argument('--n_jobs', help='Number of parallel environments.', type=int, default=2)
     parser.add_argument('--update_target', help='Number of iterations for each target update.', type=int, default=16)
     parser.add_argument('--lr', help='Optimizer learning rate.', type=float, default=1e-3)
     parser.add_argument('--gamma', help='Discount factor for the MDP.', type=float, default=1.0)
